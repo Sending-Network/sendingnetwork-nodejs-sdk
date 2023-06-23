@@ -27,7 +27,7 @@ async function login(nodeUrl: string, address: string, key: string): Promise<str
     let web3 = new Web3()
     web3.eth.accounts.wallet.add(key);
     const signature = await web3.eth.sign(loginMessage["message"], address)
-    let loginResp = await auth.didLogin(
+    let loginResp = await auth.didLogin(address,
         loginMessage["did"], loginMessage["message"], signature["signature"], 
         loginMessage["random_server"], loginMessage["updated"])
     return loginResp["access_token"]
@@ -41,7 +41,7 @@ async function login(nodeUrl: string, address: string, key: string): Promise<str
     let walletAddress = configJson['walletAddress']
     let privateKey = configJson['privateKey']
     let accessToken = configJson['accessToken']
-    if(accessToken == "") {
+    if(accessToken == "" || accessToken == undefined) {
         accessToken = await login(nodeUrl, walletAddress, privateKey)
         configJson["accessToken"] = accessToken
         fs.writeFile(configFilePath, JSON.stringify(configJson, null, 4))

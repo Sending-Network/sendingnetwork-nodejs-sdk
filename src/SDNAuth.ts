@@ -28,10 +28,17 @@ export class SDNAuth {
     }
 
     public async didPreLogin(address: string): Promise<any> {
-        const body = {"address": address}
+        const body = {}
         let response: any
         try {
-            response = await this.createTemplateClient().doRequest("POST", "/_api/client/unstable/did/pre_login1", null, body);
+            let tmpClient = this.createTemplateClient()
+            let queryDidResp = await tmpClient.doRequest("GET", "/_api/client/unstable/address/" + address);
+            if (queryDidResp["data"].length > 0) {
+                body["did"] = queryDidResp["data"][0]
+            } else {
+                body["address"] = address
+            }
+            response = await tmpClient.doRequest("POST", "/_api/client/unstable/did/pre_login1", null, body);
         } catch (e) {
             throw e
         }
@@ -39,11 +46,11 @@ export class SDNAuth {
         return response
     }
 
-    public async didLogin(did: string, message: string, token: string, nonce: string, update_time: string): Promise<any> {
+    public async didLogin(address: string, did: string, message: string, token: string, nonce: string, update_time: string): Promise<any> {
         const body = {
             "identifier": {
                 "did": did,
-                "address": did,
+                "address": address,
                 "message": message,
                 "token": token,
             },
