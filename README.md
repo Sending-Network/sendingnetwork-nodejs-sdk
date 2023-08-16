@@ -9,12 +9,13 @@ npm i sendingnetwork-bot-sdk
 ```
 
 ### Prepare a configuration file
-Provide server node url, wallet address and private key in file bot.creds.json:
+Provide server node url, wallet address, private key and developer key in file bot.creds.json:
 ```json
 {
     "nodeUrl": "https://example.com",
     "walletAddress": "",
-    "privateKey": ""
+    "privateKey": "",
+    "developerKey": ""
 }
 ```
 
@@ -25,14 +26,15 @@ After reading the configuration file, create an instance of `SDNClient`. Registe
 let auth = new SDNAuth(nodeUrl)
 let loginMessage = await auth.didPreLogin(address)
 
-// sign message
 let web3 = new Web3()
-web3.eth.accounts.wallet.add(key);
-let signature = await web3.eth.sign(loginMessage["message"], address)
+// sign with wallet account key
+let walletSignature = web3.eth.accounts.sign(loginMessage["message"], key)
+// sign with developer key (add '0x' prefix if necessary)
+let developerKeySignature = web3.eth.accounts.sign(loginMessage["message"], developerKey)
 
 // didLogin to get access token
-let loginResp = await auth.didLogin(
-    loginMessage["did"], loginMessage["message"], signature["signature"], 
+let loginResp = await auth.didLoginWithAppToken(address,
+    loginMessage["did"], loginMessage["message"], walletSignature["signature"], developerKeySignature["signature"],
     loginMessage["random_server"], loginMessage["updated"])
 let accessToken = loginResp["access_token"]
 

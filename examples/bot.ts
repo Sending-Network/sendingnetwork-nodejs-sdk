@@ -21,14 +21,17 @@ LogService.trace = LogService.debug;
 const configFilePath = "./examples/storage/bot.creds.json"
 const storage = new SimpleFsStorageProvider("./examples/storage/bot.json");
 
-async function login(nodeUrl: string, address: string, key: string): Promise<string> {
+async function login(nodeUrl: string, address: string, key: string, developerKey: string): Promise<string> {
     const auth = new SDNAuth(nodeUrl)
     let loginMessage = await auth.didPreLogin(address)
     let web3 = new Web3()
-    web3.eth.accounts.wallet.add(key);
-    const signature = await web3.eth.sign(loginMessage["message"], address)
-    let loginResp = await auth.didLogin(address,
-        loginMessage["did"], loginMessage["message"], signature["signature"], 
+    // sign with wallet account key
+    let walletSignature = web3.eth.accounts.sign(loginMessage["message"], key)
+    // sign with developer key (add '0x' prefix if necessary)
+    let developerKeySignature = web3.eth.accounts.sign(loginMessage["message"], developerKey)
+    //did login
+    let loginResp = await auth.didLoginWithAppToken(address,
+        loginMessage["did"], loginMessage["message"], walletSignature["signature"], developerKeySignature["signature"],
         loginMessage["random_server"], loginMessage["updated"])
     return loginResp["access_token"]
 }
@@ -40,9 +43,10 @@ async function login(nodeUrl: string, address: string, key: string): Promise<str
     let nodeUrl = configJson['nodeUrl']
     let walletAddress = configJson['walletAddress']
     let privateKey = configJson['privateKey']
+    let developerKey = configJson['developerKey']
     let accessToken = configJson['accessToken']
     if(accessToken == "" || accessToken == undefined) {
-        accessToken = await login(nodeUrl, walletAddress, privateKey)
+        accessToken = await login(nodeUrl, walletAddress, privateKey, developerKey)
         configJson["accessToken"] = accessToken
         fs.writeFile(configFilePath, JSON.stringify(configJson, null, 4))
     }

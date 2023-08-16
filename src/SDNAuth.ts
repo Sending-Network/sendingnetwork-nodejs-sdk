@@ -47,12 +47,17 @@ export class SDNAuth {
     }
 
     public async didLogin(address: string, did: string, message: string, token: string, nonce: string, update_time: string): Promise<any> {
+        return await this.didLoginWithAppToken(address, did, message, token, "", nonce, update_time)
+    }
+
+    public async didLoginWithAppToken(address: string, did: string, message: string, token: string, appToken: string, nonce: string, update_time: string): Promise<any> {
         const body = {
             "identifier": {
                 "did": did,
                 "address": address,
                 "message": message,
                 "token": token,
+                "app_token": appToken
             },
             "type": "m.login.did.identity",
             "random_server": nonce,
